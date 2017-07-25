@@ -25,17 +25,17 @@ import java.io.IOException;
 import java.util.Properties;
 
 /**
+ * 使用Quartz调度器的配置文件
  * Created by david on 2015-01-20.
  */
 @Configuration
 @ConditionalOnProperty(name = "quartz.enabled")
-public class SchedulerConfig {
+public class QuartzSchedulerConfig {
 
     @Bean
     public JobFactory jobFactory(ApplicationContext applicationContext,
-        // injecting SpringLiquibase to ensure liquibase is already initialized and created the quartz tables:
-        SpringLiquibase springLiquibase)
-    {
+                                 // injecting SpringLiquibase to ensure liquibase is already initialized and created the quartz tables:
+                                 SpringLiquibase springLiquibase) {
         AutowiringSpringBeanJobFactory jobFactory = new AutowiringSpringBeanJobFactory();
         jobFactory.setApplicationContext(applicationContext);
         return jobFactory;
@@ -43,7 +43,8 @@ public class SchedulerConfig {
 
     @Bean
     public SchedulerFactoryBean schedulerFactoryBean(DataSource dataSource, JobFactory jobFactory,
-                                                     @Qualifier("sampleJobTrigger") Trigger sampleJobTrigger) throws IOException {
+                                                     @Qualifier("sampleJobTrigger") Trigger sampleJobTrigger,
+                                                     @Qualifier("cronJobTrigger") Trigger cronJobTrigger) throws IOException {
         SchedulerFactoryBean factory = new SchedulerFactoryBean();
         // this allows to update triggers in DB when updating settings in config file:
         factory.setOverwriteExistingJobs(true);
@@ -51,7 +52,7 @@ public class SchedulerConfig {
         factory.setJobFactory(jobFactory);
 
         factory.setQuartzProperties(quartzProperties());
-//        factory.setTriggers(sampleJobTrigger);
+        factory.setTriggers(sampleJobTrigger, cronJobTrigger);
 
         return factory;
     }
@@ -73,6 +74,12 @@ public class SchedulerConfig {
     public SimpleTriggerFactoryBean sampleJobTrigger(@Qualifier("sampleJobDetail") JobDetail jobDetail,
                                                      @Value("${samplejob.frequency}") long frequency) {
         return createTrigger(jobDetail, frequency);
+    }
+
+    @Bean(name = "cronJobTrigger")
+    public CronTriggerFactoryBean sampleCronJobTrigger(@Qualifier("sampleJobDetail") JobDetail jobDetail,
+                                                       @Value("${cron.expression}") String cron) {
+        return createCronTrigger(jobDetail, cron);
     }
 
     private static JobDetailFactoryBean createJobDetail(Class jobClass) {

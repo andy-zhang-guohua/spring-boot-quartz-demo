@@ -4,6 +4,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+
 /**
  * Created by david on 2015-01-20.
  */
@@ -13,6 +15,6 @@ public class SampleService {
     private static final Logger LOG = LoggerFactory.getLogger(SampleService.class);
 
     public void hello() {
-        LOG.info("Hello World!");
+        LOG.info("Hello World!" + LocalDateTime.now());
     }
 }
